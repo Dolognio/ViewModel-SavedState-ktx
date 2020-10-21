@@ -23,7 +23,7 @@ class SampleViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     val countUpValueEnumLiveData: MutableLiveData<CountUpValue?> by savedStateHandle.liveData(object : SavedStateAdapter<CountUpValue?, Int?> {
         override fun toSavedState(value: CountUpValue?): Int? = value?.ordinal
         override fun fromSavedState(state: Int?): CountUpValue? = CountUpValue.values().firstOrNull { it.ordinal == state }
-    })
+    }, defaultValue = CountUpValue.ONE)
     val savedStateCount: MutableLiveData<Int> by savedStateHandle.liveData(0)
     var savedStateCountText: LiveData<String> = MediatorLiveData<String>().also { liveData ->
         liveData.addSource(savedStateCount) { count ->
