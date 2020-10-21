@@ -77,7 +77,7 @@ class SampleViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
 ## Gradle
 
-[![](https://jitpack.io/v/wada811/ViewModel-SavedState-ktx.svg)](https://jitpack.io/#wada811/ViewModel-SavedState-ktx)
+[![](https://jitpack.io/v/Dolognio/ViewModel-SavedState-ktx.svg)](https://jitpack.io/#Dolognio/ViewModel-SavedState-ktx)
 
 ```groovy
 repositories {
@@ -85,7 +85,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.wada811:ViewModel-SavedState-ktx:x.y.z'
+    implementation 'com.github.Dolognio:ViewModel-SavedState-ktx:x.y.z'
 }
 ```
 
