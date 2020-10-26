@@ -1,12 +1,9 @@
 package com.wada811.viewmodelsavedstate.sample
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.*
 import com.wada811.viewmodelsavedstate.SavedStateAdapter
 import com.wada811.viewmodelsavedstate.liveData
+import kotlinx.coroutines.delay
 
 class SampleViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     enum class CountUpValue(val count: Int) {
@@ -30,7 +27,8 @@ class SampleViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
             liveData.value = "$count"
         }
     }
-
+    val liveDataInitializedFromSuspendFunction: LiveData<String> by savedStateHandle.liveData(
+        defaultValueLoader = { longLoading() })
     val log: MutableLiveData<String> by savedStateHandle.liveData("Log:")
 
     init {
@@ -46,7 +44,8 @@ class SampleViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         val maxLineCount = 5
         val logLines = log.value!!.split("\n")
         if (logLines.size > maxLineCount) {
-            log.value = logLines.subList(logLines.size - maxLineCount + 1, logLines.size).joinToString("\n")
+            log.value =
+                logLines.subList(logLines.size - maxLineCount + 1, logLines.size).joinToString("\n")
         }
         log.value = log.value + "\n$text"
     }
@@ -54,5 +53,10 @@ class SampleViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         appendLog("ViewModel::onCleared")
+    }
+
+    private suspend fun longLoading(): String {
+        delay(2000)
+        return "String loaded from suspend function."
     }
 }

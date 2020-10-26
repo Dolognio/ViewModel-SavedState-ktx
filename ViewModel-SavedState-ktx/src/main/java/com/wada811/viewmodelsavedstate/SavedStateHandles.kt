@@ -3,14 +3,10 @@ package com.wada811.viewmodelsavedstate
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.wada811.viewmodelsavedstate.property.ReadOnlyPropertyProvider
-import com.wada811.viewmodelsavedstate.property.ReadWritePropertyProvider
-import com.wada811.viewmodelsavedstate.property.SavedStateLiveDataProperty
-import com.wada811.viewmodelsavedstate.property.SavedStateLiveDataSerializableProperty
-import com.wada811.viewmodelsavedstate.property.SavedStateProperty
-import com.wada811.viewmodelsavedstate.property.SavedStateSerializableProperty
-import com.wada811.viewmodelsavedstate.property.provideReadOnlyProperty
-import com.wada811.viewmodelsavedstate.property.provideReadWriteProperty
+import com.wada811.viewmodelsavedstate.property.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.properties.ReadOnlyProperty
 import kotlin.properties.ReadWriteProperty
 
@@ -28,14 +24,49 @@ fun <T> SavedStateHandle.property(defaultValue: T): ReadWritePropertyProvider<Vi
     }
 }
 
+fun <T> SavedStateHandle.property(defaultValueLoader: suspend () -> T): ReadWritePropertyProvider<ViewModel, T> {
+    return provideReadWriteProperty {
+        if (!this.contains(it)) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val coroutineValue = defaultValueLoader()
+                CoroutineScope(Dispatchers.Main).launch {
+                    this@property[it] = coroutineValue
+                }
+            }
+        }
+        @Suppress("RemoveExplicitTypeArguments")
+        property<T>()
+    }
+}
+
 fun <TValue, TState> SavedStateHandle.property(adapter: SavedStateAdapter<TValue, TState>): ReadWriteProperty<ViewModel, TValue> {
     return SavedStateSerializableProperty(this, adapter)
 }
 
-fun <TValue, TState> SavedStateHandle.property(adapter: SavedStateAdapter<TValue, TState>, defaultValue: TValue): ReadWritePropertyProvider<ViewModel, TValue> {
+fun <TValue, TState> SavedStateHandle.property(
+    adapter: SavedStateAdapter<TValue, TState>,
+    defaultValue: TValue
+): ReadWritePropertyProvider<ViewModel, TValue> {
     return provideReadWriteProperty {
         if (!this.contains(it)) {
             this[it] = defaultValue
+        }
+        property(adapter)
+    }
+}
+
+fun <TValue, TState> SavedStateHandle.property(
+    adapter: SavedStateAdapter<TValue, TState>,
+    defaultValueLoader: suspend () -> TValue
+): ReadWritePropertyProvider<ViewModel, TValue> {
+    return provideReadWriteProperty {
+        if (!this.contains(it)) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val coroutineValue = defaultValueLoader()
+                CoroutineScope(Dispatchers.Main).launch {
+                    this@property[it] = adapter.toSavedState(coroutineValue)
+                }
+            }
         }
         property(adapter)
     }
@@ -55,16 +86,52 @@ fun <T> SavedStateHandle.liveData(defaultValue: T): ReadOnlyPropertyProvider<Vie
     }
 }
 
+fun <TValue> SavedStateHandle.liveData(defaultValueLoader: suspend () -> TValue): ReadOnlyPropertyProvider<ViewModel, MutableLiveData<TValue>> {
+    return provideReadOnlyProperty {
+        if (!this.contains(it)) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val coroutineValue = defaultValueLoader()
+                CoroutineScope(Dispatchers.Main).launch {
+                    this@liveData[it] = coroutineValue
+                }
+            }
+        }
+        @Suppress("RemoveExplicitTypeArguments")
+        liveData<TValue>()
+    }
+}
+
 fun <TValue, TState> SavedStateHandle.liveData(adapter: SavedStateAdapter<TValue, TState>): ReadOnlyProperty<ViewModel, MutableLiveData<TValue>> {
     return SavedStateLiveDataSerializableProperty(this, adapter)
 }
 
-fun <TValue, TState> SavedStateHandle.liveData(adapter: SavedStateAdapter<TValue, TState>, defaultValue: TValue): ReadOnlyPropertyProvider<ViewModel, MutableLiveData<TValue>> {
+fun <TValue, TState> SavedStateHandle.liveData(
+    adapter: SavedStateAdapter<TValue, TState>,
+    defaultValue: TValue
+): ReadOnlyPropertyProvider<ViewModel, MutableLiveData<TValue>> {
     return provideReadOnlyProperty {
         if (!this.contains(it)) {
             this[it] = adapter.toSavedState(defaultValue)
         }
         liveData(adapter)
+    }
+}
+
+fun <TValue, TState> SavedStateHandle.liveData(
+    adapter: SavedStateAdapter<TValue, TState>,
+    defaultValueLoader: suspend () -> TValue
+): ReadOnlyPropertyProvider<ViewModel, MutableLiveData<TValue>> {
+    return provideReadOnlyProperty {
+        if (!this.contains(it)) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val coroutineValue = defaultValueLoader()
+                CoroutineScope(Dispatchers.Main).launch {
+                    this@liveData[it] = adapter.toSavedState(coroutineValue)
+                }
+            }
+        }
+        @Suppress("RemoveExplicitTypeArguments")
+        liveData<TValue>()
     }
 }
 

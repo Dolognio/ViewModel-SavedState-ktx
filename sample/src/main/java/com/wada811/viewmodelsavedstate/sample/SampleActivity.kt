@@ -52,9 +52,16 @@ class SampleActivity : AppCompatActivity(R.layout.sample_activity) {
                 viewModel.appendLog("Activity::restart")
                 startActivity(MainActivity.createIntent(this))
             } else {
-                Toast.makeText(this, "adb shell settings put global always_finish_activities 1", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this,
+                    "adb shell settings put global always_finish_activities 1",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
+        viewModel.liveDataInitializedFromSuspendFunction.observe(this, {
+            viewModel.appendLog("Observed LiveData initialized from suspend function.")
+        })
     }
 
     private fun isEnabledDoNotKeepActivities(): Boolean {
