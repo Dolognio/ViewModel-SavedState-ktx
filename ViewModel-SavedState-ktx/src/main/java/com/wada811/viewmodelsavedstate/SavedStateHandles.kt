@@ -24,18 +24,18 @@ fun <T> SavedStateHandle.property(defaultValue: T): ReadWritePropertyProvider<Vi
     }
 }
 
-fun <T> SavedStateHandle.property(defaultValueLoader: suspend () -> T): ReadWritePropertyProvider<ViewModel, T> {
+fun <T> SavedStateHandle.property(defaultValueLoader: suspend () -> T?): ReadWritePropertyProvider<ViewModel, T?> {
     return provideReadWriteProperty {
         if (!this.contains(it)) {
             CoroutineScope(Dispatchers.IO).launch {
-                val coroutineValue = defaultValueLoader()
+                val defaultValue = defaultValueLoader()
                 CoroutineScope(Dispatchers.Main).launch {
-                    this@property[it] = coroutineValue
+                    this@property[it] = defaultValue
                 }
             }
         }
         @Suppress("RemoveExplicitTypeArguments")
-        property<T>()
+        property<T?>()
     }
 }
 
@@ -49,22 +49,22 @@ fun <TValue, TState> SavedStateHandle.property(
 ): ReadWritePropertyProvider<ViewModel, TValue> {
     return provideReadWriteProperty {
         if (!this.contains(it)) {
-            this[it] = defaultValue
+            this[it] = adapter.toSavedState(defaultValue)
         }
         property(adapter)
     }
 }
 
 fun <TValue, TState> SavedStateHandle.property(
-    adapter: SavedStateAdapter<TValue, TState>,
-    defaultValueLoader: suspend () -> TValue
-): ReadWritePropertyProvider<ViewModel, TValue> {
+    adapter: SavedStateAdapter<TValue?, TState?>,
+    defaultValueLoader: suspend () -> TValue?
+): ReadWritePropertyProvider<ViewModel, TValue?> {
     return provideReadWriteProperty {
         if (!this.contains(it)) {
             CoroutineScope(Dispatchers.IO).launch {
-                val coroutineValue = defaultValueLoader()
+                val defaultValue = defaultValueLoader()
                 CoroutineScope(Dispatchers.Main).launch {
-                    this@property[it] = adapter.toSavedState(coroutineValue)
+                    this@property[it] = adapter.toSavedState(defaultValue)
                 }
             }
         }
@@ -86,18 +86,18 @@ fun <T> SavedStateHandle.liveData(defaultValue: T): ReadOnlyPropertyProvider<Vie
     }
 }
 
-fun <TValue> SavedStateHandle.liveData(defaultValueLoader: suspend () -> TValue): ReadOnlyPropertyProvider<ViewModel, MutableLiveData<TValue>> {
+fun <TValue> SavedStateHandle.liveData(defaultValueLoader: suspend () -> TValue?): ReadOnlyPropertyProvider<ViewModel, MutableLiveData<TValue?>> {
     return provideReadOnlyProperty {
         if (!this.contains(it)) {
             CoroutineScope(Dispatchers.IO).launch {
-                val coroutineValue = defaultValueLoader()
+                val defaultValue = defaultValueLoader()
                 CoroutineScope(Dispatchers.Main).launch {
-                    this@liveData[it] = coroutineValue
+                    this@liveData[it] = defaultValue
                 }
             }
         }
         @Suppress("RemoveExplicitTypeArguments")
-        liveData<TValue>()
+        liveData<TValue?>()
     }
 }
 
@@ -118,20 +118,20 @@ fun <TValue, TState> SavedStateHandle.liveData(
 }
 
 fun <TValue, TState> SavedStateHandle.liveData(
-    adapter: SavedStateAdapter<TValue, TState>,
-    defaultValueLoader: suspend () -> TValue
-): ReadOnlyPropertyProvider<ViewModel, MutableLiveData<TValue>> {
+    adapter: SavedStateAdapter<TValue?, TState?>,
+    defaultValueLoader: suspend () -> TValue?
+): ReadOnlyPropertyProvider<ViewModel, MutableLiveData<TValue?>> {
     return provideReadOnlyProperty {
         if (!this.contains(it)) {
             CoroutineScope(Dispatchers.IO).launch {
-                val coroutineValue = defaultValueLoader()
+                val defaultValue = defaultValueLoader()
                 CoroutineScope(Dispatchers.Main).launch {
-                    this@liveData[it] = adapter.toSavedState(coroutineValue)
+                    this@liveData[it] = adapter.toSavedState(defaultValue)
                 }
             }
         }
         @Suppress("RemoveExplicitTypeArguments")
-        liveData<TValue>()
+        liveData(adapter)
     }
 }
 

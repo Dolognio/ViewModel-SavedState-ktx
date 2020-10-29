@@ -60,7 +60,10 @@ class SampleActivity : AppCompatActivity(R.layout.sample_activity) {
             }
         }
         viewModel.liveDataInitializedFromSuspendFunction.observe(this, {
-            viewModel.appendLog("Observed LiveData initialized from suspend function.")
+            viewModel.appendLog("LiveData initialized from suspend function: $it")
+        })
+        viewModel.countUpValueEnumSuspendLiveData.observe(this, {
+            viewModel.appendLog("LiveData initialized from suspend function with adapter: $it")
         })
     }
 

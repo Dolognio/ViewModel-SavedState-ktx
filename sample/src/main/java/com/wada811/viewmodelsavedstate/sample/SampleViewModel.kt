@@ -21,13 +21,20 @@ class SampleViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         override fun toSavedState(value: CountUpValue?): Int? = value?.ordinal
         override fun fromSavedState(state: Int?): CountUpValue? = CountUpValue.values().firstOrNull { it.ordinal == state }
     }, defaultValue = CountUpValue.ONE)
+    val countUpValueEnumSuspendLiveData: MutableLiveData<CountUpValue?> by savedStateHandle.liveData(object :
+            SavedStateAdapter<CountUpValue?, Int?> {
+        override fun toSavedState(value: CountUpValue?): Int? = value?.ordinal
+        override fun fromSavedState(state: Int?): CountUpValue? =
+                CountUpValue.values().firstOrNull() { it.ordinal == state }
+    },
+        defaultValueLoader = { longLoadingCountUp() })
     val savedStateCount: MutableLiveData<Int> by savedStateHandle.liveData(0)
     var savedStateCountText: LiveData<String> = MediatorLiveData<String>().also { liveData ->
         liveData.addSource(savedStateCount) { count ->
             liveData.value = "$count"
         }
     }
-    val liveDataInitializedFromSuspendFunction: LiveData<String> by savedStateHandle.liveData(
+    val liveDataInitializedFromSuspendFunction: LiveData<String?> by savedStateHandle.liveData(
         defaultValueLoader = { longLoading() })
     val log: MutableLiveData<String> by savedStateHandle.liveData("Log:")
 
@@ -58,5 +65,10 @@ class SampleViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     private suspend fun longLoading(): String {
         delay(2000)
         return "String loaded from suspend function."
+    }
+
+    private suspend fun longLoadingCountUp(): CountUpValue {
+        delay(4000)
+        return CountUpValue.ONE
     }
 }
